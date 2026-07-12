@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Docker Compose
+        run: docker compose -f docker/docker-compose.yml config --quiet
+
+      - name: Lint shell scripts
+        run: |
+          sudo apt-get install -y shellcheck
+          shellcheck scripts/*.sh
+
+      - name: Check environment template
+        run: |
+          echo "Checking .env.example has required keys..."
+          grep -q "N8N_HOST" docker/n8n.env.example
+          grep -q "POSTGRES_PASSWORD" docker/n8n.env.example
+          echo "✅ Environment template valid"
